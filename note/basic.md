@@ -10,7 +10,7 @@ Shape[2] 代表通道数。
     shape[1]---高
     shape[2]---通道数`
 ```
-# 按位运算
+## 按位运算
 这里有一些关键字，如下
 ```python
 bitwise_and
