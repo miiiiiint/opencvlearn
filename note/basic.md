@@ -1,5 +1,4 @@
 >#  opencv learn notes
->#  opencv learn notes
 > 显而易见，这是一个关于opencv学习的笔记
 
 <<<<<<< HEAD
