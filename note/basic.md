@@ -1,7 +1,6 @@
 >#  opencv learn notes
 > 显而易见，这是一个关于opencv学习的笔记
 
-<<<<<<< HEAD
 # GUI特性
 ## cv.imread()，cv.imshow()，cv.imwrite()
 **imread**可以用于读取图像
@@ -55,7 +54,7 @@ cv.destroyAllWindows()
 ```
 
 所有视频操作都需要在结束时使用`cap.release()`释放资源
-=======
+
 #  shape
 ##### 使用shape函数会返回一个数组
 前两项 shape[0] 和 shape[1] 表示图像的宽度和高度。
@@ -113,4 +112,3 @@ kernel = np.ones((30,30),np.unit8)
 礼帽 = 原始输入-开运算结果#突出了原图像更亮的区域
 黑帽 = 闭运算-原始输入#突出了原图像更暗的区域
 ```
->>>>>>> d34d6e0664c110d2dcac9c82ef3141eb9fef118c
