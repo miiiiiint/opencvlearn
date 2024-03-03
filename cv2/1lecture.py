@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 
-img = cv.imread('1.jpg',0)
+img = cv.imread('a.jpg',0)
 cv.imshow('image',img)
 k = cv.waitKey(0)& 0xFF
 if k == 27: # ESC 退出

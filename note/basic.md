@@ -254,8 +254,8 @@ img2 = cv2.merge((b,g,r))
 **cv.cvtColor()，cv.inRange()**
 在 OpenCV 中有超过 150 种颜色空间转换的方法。但我们仅需要研究两个最常使用的方法，他们是 BGR 到 Gray，BGR 到 HSV。
 
-然后在cv2文件中写了一个bgr到hsv的例子。
-另外，下面展示了怎么通过**cv.cvtColor()**来找到hsv空间的颜色值
+然后在cv2文件中写了一个bgr到hsv的例子。然后在hsv空间中提取出了图片的蓝色部分。。
+另外，下面展示了怎么通过 **cv.cvtColor()** 来找到hsv空间的颜色值
 ```py
 >>> green = np.uint8([[[0,255,0 ]]])
 >>> hsv_green = cv.cvtColor(green,cv.COLOR_BGR2HSV)
@@ -263,7 +263,73 @@ img2 = cv2.merge((b,g,r))
 [[[ 60 255 255]]]
 ```
 
+## 图像的几何变换
+**cv.warpAffine** ， **cv.warpPerspective**， **cv.resize()** 
+### 缩放
+`cv2.resize(src, dsize, dst=None, fx=None, fy=None, interpolation=cv2.INTER_LINEAR)
+`
+src：输入图像。
+dsize：目标图像大小，以(width, height)的形式表示。如果设置为None，则必须通过fx和fy参数指定缩放比例。
+dst：输出图像。这是一个可选参数。
+fx和fy：分别沿x轴和y轴的缩放比例。如果dsize为None，则这两个参数必须被指定。否则，它们是可选的。
+interpolation：插值方法。这是一个非常重要的参数，因为它决定了在缩放过程中如何计算新像素的值。OpenCV提供了多种插值方法，例如：
+>cv2.INTER_LINEAR：线性插值（默认值），适用于大多数情况。
+cv2.INTER_NEAREST：最近邻插值，速度最快，但质量最低，可能会导致锯齿边缘。
+cv2.INTER_AREA：区域插值，适用于缩小图像时。
+cv2.INTER_CUBIC：三次插值，比线性插值慢，但质量更好。
+cv2.INTER_LANCZOS4：Lanczos插值，使用8x8邻域，提供高质量的结果。
+### 平移，旋转，仿射和透视
+这里似乎设计到数学中的矩阵知识。
+![alt text](https://apachecn.github.io/opencv-doc-zh/docs/4.0.0/img/Geometric_Transformations_fomula_1.png)
+所以我们先了解 **cv.warpAffine** 这个函数
+`cv2.warpAffine(src, M, dsize, dst=None, flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+`
+>src：输入图像。
+**M：2x3的变换矩阵。**
+dsize：输出图像的大小，以(width, height)形式表示。
+dst：输出图像。这是一个可选参数。
+flags：插值方法。与cv.resize()函数中的插值方法相同，常用的有cv2.INTER_LINEAR、cv2.INTER_NEAREST等。 **（因为在实际操作时，很有可能无法将像素点映射到对应的整数点，所以这个时候就需要差值处理）** 
+borderMode：边界像素模式。这个参数定义了图像边界的处理方式，常见的有cv2.BORDER_CONSTANT（添加固定颜色边界）、cv2.BORDER_REFLECT、cv2.BORDER_WRAP等。
+borderValue：当borderMode=cv2.BORDER_CONSTANT时使用的边界颜色值，默认为0，即黑色。
 
+这个opencv通过这个M来计算每一个像素的落点位置，那么，我们该怎么真的这个M呢？
+~~那当然是直接算啦~~
+咳咳，其实opencv提供了一些函数来运算M，比如cv.getAffineTransform ， cv.getRotationMatrix2D， cv.getPerspectiveTransform。他们分别是计算旋转矩阵，仿射变化矩阵和透视变换的函数。不过透视变换要使用 **cv.warpPerspective** 而不是 **cv.warpAffine** 记着就好，具体参数就不在说明了，因为要用的时候也很好查到。
+
+## 图像阈值
+如果像素值大于阈值，则会被赋为一个值（可能为白色），否则会赋为另一个值（可能为黑色）。使用的函数是 **cv.threshold** 。
+`retval, dst = cv2.threshold(src, thresh, maxval, type)
+`
+>src：输入图像，必须是单通道的灰度图。
+
+>thresh：阈值，用于与像素值比较的数值。
+
+>maxval：当像素值超过（有时是低于，取决于阈值类型）阈值时应该被赋予的最大值。
+
+>type：阈值类型，决定了具体的阈值处理策略。OpenCV 提供了多种阈值类型：
+>>cv2.THRESH_BINARY：如果像素值超过阈值，则被赋予 maxval，否则为 0。
+cv2.THRESH_BINARY_INV：THRESH_BINARY 的反转，如果像素值超过阈值，则为 0，否则为 maxval。
+cv2.THRESH_TRUNC：如果像素值超过阈值，则被设置为阈值，否则保持不变。
+cv2.THRESH_TOZERO：如果像素值低于阈值，则设置为 0，否则保持不变。
+cv2.THRESH_TOZERO_INV：THRESH_TOZERO 的反转，如果像素值超过阈值，则设置为 0，否则保持不变。
+
+>retval：实际使用的阈值，这在自适应阈值处理（例如 Otsu's 方法）中特别有用。
+
+>dst：输出图像，与输入图像有相同的大小和类型。
+## 自适应阈值
+**cv.adaptiveThreshold**
+`dst = cv2.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C)
+`
+```py
+# 应用自适应阈值处理
+thresholded_img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY, 11, 2)
+
+# 显示结果
+cv2.imshow('Original Image', img)
+cv2.imshow('Adaptive Thresholded Image', thresholded_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+```
 ## 图像轮廓
 emmm.我知道可以通过梯度算法(膨胀-腐蚀)来运算出图像的边缘
 膨胀操作（我不会？
