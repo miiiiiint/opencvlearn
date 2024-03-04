@@ -320,6 +320,7 @@ cv2.THRESH_TOZERO_INV：THRESH_TOZERO 的反转，如果像素值超过阈值，
 **cv.adaptiveThreshold**
 `dst = cv2.adaptiveThreshold(src, maxValue, adaptiveMethod, thresholdType, blockSize, C)
 `
+具体可以看写出的代码，这个函数会根据周围像素的平均值来生成阈值，更加适合有光照变化的场景。
 ```py
 # 应用自适应阈值处理
 thresholded_img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C,cv2.THRESH_BINARY, 11, 2)
@@ -329,6 +330,47 @@ cv2.imshow('Original Image', img)
 cv2.imshow('Adaptive Thresholded Image', thresholded_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+```
+
+## 平滑图像
+opencv 提供了函数 **cv.filter2D()**，用于将内核与图像卷积起来。
+操作如下：将该内核中心与一个像素对齐，然后将该内核下面的所有 25 个像素相加，取其平均值，并用新的平均值替换这个25x25窗口的中心像素。
+>有一说一，并不是很懂原理，因为我还没有学过卷积。
+### 图像模糊（图像平滑）
+有下面几种
+#### 均值模糊
+**cv.blur()** 或 **cv.boxFilter()**
+顾名思义，取像素点的均值。
+
+#### 高斯模糊
+嘶，不知道怎么处理的，不过用法如下
+`blur = cv.GaussianBlur(img,(5,5),0)
+`
+#### 中值模糊
+**cv.medianBlur()**
+顾名思义，取周围像素点的中值。
+
+#### 双边滤波
+**cv.bilateralFilter()** 在保持边缘锐利的同时，对噪声去除非常有效。但与其他过滤器相比，操作速度较慢。
+现在先只记特点，原理不知道思密达。
+
+## 形态转换
+### 腐蚀
+我的理解：一个方格扫描图像中的像素，所有像素都为“1”才保留，否则就舍弃了。
+结果是小了一圈。
+### 膨胀
+我的理解：一个方格扫描图像中的像素，只要一个像素为“1”，那这个方格里的所有像素都变成“1”。
+结果是大了一圈。
+
+### 开运算
+先腐蚀后膨胀。正如我们上面所解释的，它对消除噪音很有用。在这里，`cv.morphologyEx(img, cv.MORPH_OPEN, kernel)`。
+### 闭运算
+关闭与打开相反，膨胀后腐蚀。它在填充前景对象内的小孔或对象上的小黑点时很有用
+`cv.morphologyEx(img, cv.MORPH_CLOSE, kernel)`
+### 顶帽与黑帽
+```python
+顶帽 = 原始输入-开运算结果#突出了原图像更亮的区域
+黑帽 = 闭运算-原始输入#突出了原图像更暗的区域
 ```
 ## 图像轮廓
 emmm.我知道可以通过梯度算法(膨胀-腐蚀)来运算出图像的边缘
@@ -343,13 +385,3 @@ kernel = np.ones((30,30),np.unit8)
 >将dilate替换成erode即可
 
 以此可以得到图像的边缘，但是还不算是轮廓，后面还有一个叫开运算和闭运算的东西
-### 开运算
-先腐蚀在膨胀
-### 闭运算
-现膨胀再腐蚀
-## 礼帽与黑帽
-有一说一我是看不懂这个的（后面还得再学反正，现在先过一遍再说
-```python
-礼帽 = 原始输入-开运算结果#突出了原图像更亮的区域
-黑帽 = 闭运算-原始输入#突出了原图像更暗的区域
-```
