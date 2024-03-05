@@ -372,16 +372,41 @@ opencv 提供了函数 **cv.filter2D()**，用于将内核与图像卷积起来�
 顶帽 = 原始输入-开运算结果#突出了原图像更亮的区域
 黑帽 = 闭运算-原始输入#突出了原图像更暗的区域
 ```
-## 图像轮廓
-emmm.我知道可以通过梯度算法(膨胀-腐蚀)来运算出图像的边缘
-膨胀操作（我不会？
-```python
-cv2.dilate(img,kernel,iterations = n)
-n = 1#n是一个常数决定腐蚀次数
-kernel = np.ones((30,30),np.unit8)
-#我也不知道这是什么，可能是我跳着看的原因？
-```
-腐蚀操作
->将dilate替换成erode即可
+### 嘶，图像梯度，用了一大堆词语来试图让我理解这个东西，emmmm，但最后还是没懂，~~数学实在是太让人头大了~~
+ OpenCv 提供三种类型的梯度滤波器或高通滤波器，Sobel、Scharr 和 Laplacian。（有一说一，还是不太懂，不过还是记下来先）
+ ```py
+ import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('box.png',0)
+# Output dtype = cv.CV_8U
+sobelx8u = cv.Sobel(img,cv.CV_8U,1,0,ksize=5)
+# Output dtype = cv.CV_64F. Then take its absolute and convert to cv.CV_8U
+sobelx64f = cv.Sobel(img,cv.CV_64F,1,0,ksize=5)
+abs_sobel64f = np.absolute(sobelx64f)
+sobel_8u = np.uint8(abs_sobel64f)
+plt.subplot(1,3,1),plt.imshow(img,cmap = 'gray')
+plt.title('Original'), plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,2),plt.imshow(sobelx8u,cmap = 'gray')
+plt.title('Sobel CV_8U'), plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,3),plt.imshow(sobel_8u,cmap = 'gray')
+plt.title('Sobel abs(CV_64F)'), plt.xticks([]), plt.yticks([])
+plt.show()
+ ```
 
-以此可以得到图像的边缘，但是还不算是轮廓，后面还有一个叫开运算和闭运算的东西
+ 在上一个示例中，输出数据类型是 cv.CV_8U或 np.uint8。但这有一个小问题。黑白过渡为正斜率（有正值），而白黑过渡为负斜率（有负值）。所以当你把数据转换成 np.uint8 时，所有的负斜率都变成零。简单来说，你失去了边缘。
+ >这个就是不同数据类型的范围不同呗，np.uint8里面没有负值，所以所有的负值在转换时都会变为0.
+
+ ## 边缘检测
+ 啊啊啊，终于到边缘检测了
+ **cv.Canny（）**
+ Canny 边缘检测是一种流行的边缘检测算法。它是由 John F. Canny 在 1986 年提出。
+ 首先第一步，我们需要对图像进行降噪，也就是使用我们前面所学到的高斯滤波器。因为边缘检测很容易受到图像中的噪声影响，所以这一步是很有必要的。
+
+ 然后，在水平和垂直方向上用 Sobel 内核对平滑后的图像进行滤波，这是为了寻找到图像的强度梯度，就像图像梯度里面所做的一样。
+
+ 嘶，再然后就有些头疼了。这一步是叫 **非最大抑制** ，意思就是在获得梯度幅度和方向之后，完成图像的全扫描以去除可能不构成边缘的任何不需要的像素。为此，在每个像素处，检查像素是否是其在梯度方向上的邻域中的局部最大值。（人话：不构成边缘的像素会被抑制，也就是设为0）
+
+ 最后是 **滞后阈值** ，简单来讲，就是通过算法，来去除掉不是边缘的边缘，这个算法需要两个阈值来决定去掉哪些边缘，分别是最大阈值maxval和最小阈值minval。下面看原文
+ ![alt text](https://apachecn.github.io/opencv-doc-zh/docs/4.0.0/img/Image_canny_hysteresis.jpg)
+ 边缘 A 高于 maxVal，因此被视为“确定边缘”。虽然边 C 低于 maxVal，但它连接到边 A，因此也被视为有效边，我们得到完整的曲线。但是边缘 B 虽然高于 minVal 并且与边缘 C 的区域相同，但它没有连接到任何“可靠边缘”，因此被丢弃。因此，我们必须相应地选择 minVal 和 maxVal 才能获得正确的结果。
