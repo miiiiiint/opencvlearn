@@ -1,6 +1,12 @@
-import cv2 as cv
-img = cv.imread('b.jpg',0)
+import cv2
+import numpy
+img = cv2.imread('b.jpg')
+'''
 if img is None:
     print("图像未加载")
 else:
-    cv.imshow('img',img)
+    cv2.imshow('img',img)
+    '''
+cv2.imshow('img',img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

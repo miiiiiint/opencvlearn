@@ -6,7 +6,8 @@ def nothing(x):
     pass
 
 # 首先，读取图像
-img = cv.imread('mp.png', 0)
+img = cv.VideoCapture(0)
+
 if img is None:
     print("Error: 图像未成功加载，请检查文件路径。")
     exit()
@@ -19,18 +20,19 @@ cv.createTrackbar('maxval', 'image', 100, 1000, nothing)
 cv.createTrackbar('minval', 'image', 200, 1000, nothing)
 
 while(True):
+    ret, frame = img.read()
     # 获取轨迹条的当前位置作为Canny算法的参数
     maxval = cv.getTrackbarPos('maxval', 'image')
     minval = cv.getTrackbarPos('minval', 'image')
 
     # 使用Canny算法进行边缘检测
-    edges = cv.Canny(img, minval, maxval)
+    edges = cv.Canny(frame, minval, maxval)
 
-    # 将原始图像和边缘图像水平堆叠起来
-    combined = np.hstack((img, edges))
+    # 将原始图像和边缘图像堆叠起来
+
 
     # 显示堆叠后的图像
-    cv.imshow('image', combined)
+    cv.imshow('image', edges)
 
     # 按下'ESC'键退出循环
     k = cv.waitKey(1) & 0xFF
